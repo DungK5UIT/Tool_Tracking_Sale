@@ -1,0 +1,20 @@
+# Bảo mật - không push lên GitHub
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Database local
+tracker.db
+
+# Editor
+.vscode/
+*.swp
+
+# Docker
+.dockerignore
+
+# Word temp files
+~$*.docx

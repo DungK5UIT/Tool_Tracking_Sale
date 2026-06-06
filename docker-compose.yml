@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  bot_san_sale:
+    build: .
+    container_name: bot_san_sale
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount the database to the host machine to prevent data loss on rebuilds
+      - ./tracker.db:/app/tracker.db
+      - .env:/app/.env
+    environment:
+      - PORT=8080
+      - TZ=Asia/Ho_Chi_Minh

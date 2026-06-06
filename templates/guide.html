@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📖 Hướng Dẫn - Bot Săn Sale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .section {
+            border-bottom: 1px solid #eee;
+            padding: 30px;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section h3 {
+            font-size: 16px;
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .section p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        
+        .command {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            overflow-x: auto;
+        }
+        
+        .example {
+            background: #f0f4ff;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .example strong {
+            color: #10b981;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: #856404;
+        }
+        
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .pricing-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .pricing-table td {
+            border-bottom: 1px solid #eee;
+            padding: 12px;
+        }
+        
+        .pricing-table tr:hover {
+            background: #f8f9ff;
+        }
+        
+        .faq-item {
+            margin-bottom: 20px;
+        }
+        
+        .faq-q {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-q:hover {
+            background: #efefef;
+        }
+        
+        .faq-q::before {
+            content: "▶ ";
+            display: inline-block;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.open .faq-q::before {
+            transform: rotate(90deg);
+        }
+        
+        .faq-a {
+            display: none;
+            padding: 15px;
+            background: #f9f9f9;
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .faq-item.open .faq-a {
+            display: block;
+        }
+        
+        .id-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .id-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .id-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        
+        .id-note {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+        
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .step-list {
+            list-style: none;
+            counter-reset: step;
+        }
+        
+        .step-list li {
+            counter-increment: step;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .step-list li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+            }
+            
+            .btn {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📖 Hướng Dẫn Sử Dụng</h1>
+            <p>Bot Săn Sale - Theo dõi giá sản phẩm tự động</p>
+        </div>
+        
+        <div class="content">
+            <!-- TELEGRAM ID SECTION -->
+            <div class="section">
+                <h2>🆔 Telegram ID của bạn</h2>
+                <p>Mỗi khi bạn gõ <code>/start</code> trên bot Telegram, bot sẽ tự động cấp ID duy nhất cho bạn.</p>
+                
+                <div class="id-box">
+                    <div class="id-label">Để tìm ID của bạn, hãy gõ trong Telegram Bot:</div>
+                    <div class="id-value">/start</div>
+                    <div class="id-note">Bot sẽ hiển thị ID trong dòng "Telegram ID của bạn: 123456789"</div>
+                </div>
+                
+                <h3>❓ ID này là gì?</h3>
+                <p>
+                    • <strong>Mã định danh duy nhất</strong> của tài khoản Telegram của bạn<br>
+                    • <strong>Không thay đổi</strong> - mỗi lần start bot vẫn là ID cũ<br>
+                    • <strong>Dùng để:</strong> Login web dashboard, thanh toán, admin quản lý<br>
+                </p>
+                
+                <h3>✅ Cách biết ID của mình?</h3>
+                <ol class="step-list">
+                    <li><strong>Trên Telegram Bot:</strong> Gõ <code>/start</code> hoặc <code>/balance</code> → ID sẽ hiển thị</li>
+                    <li><strong>Trên Web:</strong> Truy cập dashboard → ID yêu cầu khi login</li>
+                    <li><strong>Web Payment:</strong> Link thanh toán chứa ID tự động</li>
+                </ol>
+            </div>
+            
+            <!-- COMMANDS SECTION -->
+            <div class="section">
+                <h2>🤖 Các Lệnh Telegram Bot</h2>
+                
+                <h3>1. /start - Xem thông tin và hướng dẫn</h3>
+                <div class="command">/start</div>
+                <p>Hiển thị:</p>
+                <ul style="margin-left: 20px; color: #555;">
+                    <li>Telegram ID của bạn</li>
+                    <li>Danh sách lệnh có sẵn</li>
+                    <li>Hướng dẫn sử dụng</li>
+                </ul>
+                
+                <h3>2. /track [URL] - Thêm sản phẩm vào theo dõi</h3>
+                <div class="command">/track https://shopee.vn/product-name</div>
+                <div class="example">
+                    <strong>✅ Ví dụ đúng:</strong><br>
+                    /track https://shopee.vn/Áo-khoác-nam<br>
+                    /track https://lazada.vn/product-123<br>
+                </div>
+                <div class="warning">
+                    <strong>❌ Ví dụ sai:</strong><br>
+                    /track shopee.vn/product (thiếu http://)<br>
+                    /track product-name (không đủ)
+                </div>
+                
+                <h3>3. /list - Xem danh sách sản phẩm đang theo dõi</h3>
+                <div class="command">/list</div>
+                <p><strong>Hiển thị:</strong></p>
+                <ul style="margin-left: 20px; color: #555;">
+                    <li>🔹 ID - Số hiệu để xóa</li>
+                    <li>🔗 Link - Đường link sản phẩm</li>
+                    <li>✅ Trạng thái - Có hàng (available)</li>
+                    <li>❌ Trạng thái - Hết hàng (soldout)</li>
+                    <li>⏳ Trạng thái - Đang check (unknown)</li>
+                </ul>
+                
+                <h3>4. /untrack [ID] - Ngừng theo dõi sản phẩm</h3>
+                <div class="command">/untrack 5</div>
+                <p>⚠️ <strong>Cách dùng:</strong> Lấy ID từ lệnh <code>/list</code></p>
+                
+                <h3>5. /balance - Kiểm tra số slot còn lại</h3>
+                <div class="command">/balance</div>
+                <p><strong>Hiển thị:</strong></p>
+                <ul style="margin-left: 20px; color: #555;">
+                    <li>📊 Slot sử dụng (vd: 2/5)</li>
+                    <li>💰 Tổng credits đã nạp</li>
+                    <li>📱 Telegram ID của bạn</li>
+                </ul>
+                
+                <h3>6. /upgrade - Mua thêm slot</h3>
+                <div class="command">/upgrade</div>
+                <p>Bot sẽ gửi link thanh toán để bạn mua slot thêm</p>
+                
+                <h3>7. /guide - Xem hướng dẫn chi tiết</h3>
+                <div class="command">/guide</div>
+                <p>Hiển thị hướng dẫn đầy đủ (trang này)</p>
+                
+                <h3>8. /help - Xem danh sách lệnh</h3>
+                <div class="command">/help</div>
+                <p>Hiển thị tương tự như <code>/start</code></p>
+            </div>
+            
+            <!-- PRICING SECTION -->
+            <div class="section">
+                <h2>💳 Bảng Giá Nạp Tiền</h2>
+                <p>Mỗi tài khoản được <strong>2 link miễn phí</strong>. Muốn theo dõi thêm, hãy mua slot:</p>
+                
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Gói</th>
+                            <th>Slot</th>
+                            <th>Giá</th>
+                            <th>Ghi Chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cơ bản</td>
+                            <td>+1</td>
+                            <td><strong>10.000đ</strong></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Tiết kiệm</td>
+                            <td>+5</td>
+                            <td><strong>45.000đ</strong></td>
+                            <td>💰 Tiết kiệm 5.000đ</td>
+                        </tr>
+                        <tr>
+                            <td>Khuyến mãi</td>
+                            <td>+10</td>
+                            <td><strong>80.000đ</strong></td>
+                            <td>💰 Tiết kiệm 20.000đ</td>
+                        </tr>
+                        <tr>
+                            <td>Đặc biệt</td>
+                            <td>+20</td>
+                            <td><strong>150.000đ</strong></td>
+                            <td>💰 Tiết kiệm 50.000đ</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="highlight">
+                    ✅ <strong>Slot mua được sử dụng vĩnh viễn</strong> - Không hết hạn<br>
+                    ✅ <strong>Thanh toán một lần</strong> - Không phí duy trì<br>
+                    ✅ <strong>Thanh toán linh hoạt</strong> - QR Code hoặc Chuyển khoản
+                </div>
+            </div>
+            
+            <!-- PAYMENT SECTION -->
+            <div class="section">
+                <h2>💰 Quy Trình Nạp Tiền</h2>
+                
+                <h3>Bước 1: Mở Trang Nạp Tiền</h3>
+                <ul class="step-list">
+                    <li>Gõ lệnh <code>/upgrade</code> trên bot Telegram</li>
+                    <li>Bot sẽ gửi link thanh toán + Telegram ID của bạn</li>
+                </ul>
+                
+                <h3>Bước 2: Chọn Gói Nạp Tiền</h3>
+                <ul class="step-list">
+                    <li>Chọn số lượng slot muốn mua (1, 5, 10, 20)</li>
+                    <li>Xem tổng tiền phải trả</li>
+                </ul>
+                
+                <h3>Bước 3: Chọn Phương Thức Thanh Toán</h3>
+                <div class="example">
+                    <strong>📱 QR Code</strong><br>
+                    Quét mã QR bằng ứng dụng ngân hàng hoặc ứng dụng thanh toán<br><br>
+                    <strong>🏦 Chuyển Khoản</strong><br>
+                    Chuyển khoản ngân hàng - số tài khoản sẽ hiển thị trên trang
+                </div>
+                
+                <h3>Bước 4: Thanh Toán</h3>
+                <ul class="step-list">
+                    <li>Bấm nút "Tiếp Tục Thanh Toán"</li>
+                    <li>Chờ xử lý (thường 5-30 giây)</li>
+                </ul>
+                
+                <h3>Bước 5: Hoàn Tất</h3>
+                <ul class="step-list">
+                    <li>Màn hình hiển thị "✅ Thanh Toán Thành Công"</li>
+                    <li>Slot sẽ tự động cộng vào tài khoản</li>
+                    <li>Gõ <code>/balance</code> để kiểm tra</li>
+                </ul>
+            </div>
+            
+            <!-- FAQ SECTION -->
+            <div class="section">
+                <h2>❓ Câu Hỏi Thường Gặp</h2>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Bot lâu lâu mới thông báo khi có hàng?</div>
+                    <div class="faq-a">
+                        A: Bot kiểm tra sản phẩm mỗi 2 phút. Thời gian thông báo phụ thuộc vào:<br>
+                        • Tốc độ tải website<br>
+                        • Độ trễ mạng<br>
+                        • Thời gian xử lý của hệ thống<br><br>
+                        Nếu chờ quá lâu, có thể website quá chậm hoặc bị lỗi.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Có phí gì khi sử dụng bot?</div>
+                    <div class="faq-a">
+                        A: <strong>Hoàn toàn miễn phí!</strong><br>
+                        • 2 link đầu tiên: miễn phí<br>
+                        • Thêm link: 10.000đ = +1 link<br>
+                        • Không có phí duy trì<br>
+                        • Không có phí ẩn
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Slot mua được bao lâu hết?</div>
+                    <div class="faq-a">
+                        A: <strong>Vĩnh viễn!</strong> Slot mua được lưu mãi mãi trên tài khoản của bạn. Bạn có thể sử dụng bất kỳ lúc nào mà không lo hết hạn.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Hoàn tiền được không?</div>
+                    <div class="faq-a">
+                        A: Không hỗ trợ hoàn tiền. Nhưng slot mua sẽ được lưu vĩnh viễn trên tài khoản, bạn có thể sử dụng lại bất kỳ lúc nào.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Dữ liệu của tôi có an toàn không?</div>
+                    <div class="faq-a">
+                        A: Hoàn toàn an toàn!<br>
+                        • Dữ liệu được lưu trên máy chủ riêng<br>
+                        • Không chia sẻ với bên thứ 3<br>
+                        • Mã hóa toàn bộ dữ liệu cá nhân<br>
+                        • Admin panel có xác thực bảo mật
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Làm sao để xóa tài khoản?</div>
+                    <div class="faq-a">
+                        A: Bạn có thể xóa toàn bộ sản phẩm đang theo dõi bằng lệnh <code>/untrack</code>. Để xóa hoàn toàn tài khoản, vui lòng liên hệ admin: @support_bot
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Slot chưa cộng sau thanh toán?</div>
+                    <div class="faq-a">
+                        A: Chờ 5-10 phút rồi gõ <code>/balance</code> để kiểm tra lại. Nếu vẫn không có, liên hệ admin với:<br>
+                        • Telegram ID của bạn<br>
+                        • Số tiền đã thanh toán<br>
+                        • Thời gian thanh toán<br><br>
+                        Admin: @support_bot
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-q">Q: Bot hỗ trợ những website nào?</div>
+                    <div class="faq-a">
+                        A: Bot hỗ trợ hầu hết các website thương mại điện tử:<br>
+                        ✅ Shopee<br>
+                        ✅ Lazada<br>
+                        ✅ Tiki<br>
+                        ✅ Amazon<br>
+                        ✅ eBay<br>
+                        ✅ Các website khác
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DASHBOARD SECTION -->
+            <div class="section">
+                <h2>🌐 Web Dashboard</h2>
+                <p>Ngoài bot Telegram, bạn cũng có thể quản lý sản phẩm trên web dashboard:</p>
+                
+                <h3>Truy Cập Dashboard</h3>
+                <div class="example">
+                    <strong>Địa chỉ:</strong> http://localhost:8080<br>
+                    <strong>Nhập ID:</strong> Telegram ID của bạn (ví dụ: 123456789)
+                </div>
+                
+                <h3>Tính Năng Trên Dashboard</h3>
+                <ul style="margin-left: 20px; color: #555; line-height: 2;">
+                    <li>📊 Xem danh sách sản phẩm đang theo dõi</li>
+                    <li>🔍 Tìm kiếm sản phẩm nhanh</li>
+                    <li>🗑️ Xóa sản phẩm khỏi danh sách</li>
+                    <li>💳 Nạp tiền (có thể làm từ web thay vì bot)</li>
+                    <li>📱 Xem thông tin tài khoản</li>
+                </ul>
+            </div>
+            
+            <!-- TIPS SECTION -->
+            <div class="section">
+                <h2>💡 Mẹo Sử Dụng</h2>
+                
+                <h3>1. Lưu Telegram ID Ở Nơi An Toàn</h3>
+                <p>Lưu ID của bạn trong note hoặc ghi lại để dễ dàng login web dashboard.</p>
+                
+                <h3>2. Kiểm Tra Trạng Thái Thường Xuyên</h3>
+                <p>Gõ <code>/list</code> để xem sản phẩm nào đang "unknown" (chưa xác định), có thể website không phản hồi.</p>
+                
+                <h3>3. Thêm Link Chứa Tham Số Đúng</h3>
+                <p>Đảm bảo copy-paste link chính xác từ thanh địa chỉ trình duyệt, bao gồm cả `?variant=...` nếu có.</p>
+                
+                <h3>4. Mua Slot Khi Còn Slot Trống</h3>
+                <p>Mua trước khi hết slot để không bỏ lỡ sản phẩm mới muốn theo dõi.</p>
+                
+                <h3>5. Bật Thông Báo Telegram</h3>
+                <p>Đảm bảo Telegram không im lặng để nhận thông báo khi sản phẩm có hàng.</p>
+            </div>
+            
+            <!-- SUPPORT SECTION -->
+            <div class="section">
+                <h2>📞 Hỗ Trợ & Liên Hệ</h2>
+                
+                <p>Nếu gặp vấn đề hoặc có câu hỏi, vui lòng liên hệ:</p>
+                
+                <div class="example">
+                    <strong>Telegram Bot Admin:</strong> @support_bot<br>
+                    <strong>Website:</strong> http://localhost:8080<br>
+                    <strong>Email:</strong> support@example.com<br>
+                </div>
+                
+                <p style="margin-top: 20px; color: #999; font-size: 12px;">
+                    Cảm ơn bạn đã sử dụng Bot Săn Sale! 🙏
+                </p>
+            </div>
+        </div>
+        
+        <div class="btn-container" style="margin-top: 30px;">
+            <a href="/" class="btn btn-primary">← Quay Lại Dashboard</a>
+            <a href="https://t.me/YourBotUsername" class="btn btn-secondary">💬 Mở Bot Telegram</a>
+        </div>
+    </div>
+    
+    <script>
+        // FAQ collapsible
+        document.querySelectorAll('.faq-q').forEach(q => {
+            q.addEventListener('click', function() {
+                this.parentElement.classList.toggle('open');
+            });
+        });
+        
+        // Open first FAQ item by default
+        document.querySelector('.faq-item').classList.add('open');
+    </script>
+</body>
+</html>

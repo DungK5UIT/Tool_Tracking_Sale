@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💳 Nạp Tiền Slot - Bot Săn Sale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .info-value {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .packages {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        @media (max-width: 480px) {
+            .packages {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .package {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .package:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+        
+        .package.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+        
+        .package.featured {
+            grid-column: span 2;
+            border-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .package.featured .badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #ffc107;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        @media (max-width: 480px) {
+            .package.featured {
+                grid-column: span 1;
+            }
+        }
+        
+        .package-slots {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .package-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+        
+        .package-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .package-save {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .selected-info {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .selected-info.show {
+            display: block;
+        }
+        
+        .selected-info p {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .selected-info .total {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-top: 10px;
+        }
+        
+        .payment-methods {
+            margin-bottom: 25px;
+        }
+        
+        .payment-methods h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .methods-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .method {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .method:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .method.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .method-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .method-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .btn-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-confirm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .faq {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+            border-top: 2px solid #e0e0e0;
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .faq h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .faq ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .faq li {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .faq li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Nạp Tiền Mở Rộng Slot</h1>
+            <p>Mỗi 10.000đ = +1 link theo dõi</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert" id="alertBox"></div>
+            
+            <div id="formSection" style="display: block;">
+                <div class="user-info" id="userInfo"></div>
+                
+                <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 15px; color: #333;">Chọn Gói</h3>
+                <div class="packages" id="packages"></div>
+                
+                <div class="selected-info" id="selectedInfo"></div>
+                
+                <div class="payment-methods">
+                    <h3>Phương Thức Thanh Toán</h3>
+                    <div class="methods-grid">
+                        <div class="method" data-method="qr">
+                            <div class="method-icon">📱</div>
+                            <div class="method-name">QR Code</div>
+                        </div>
+                        <div class="method" data-method="bank">
+                            <div class="method-icon">🏦</div>
+                            <div class="method-name">Chuyển Khoản</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn btn-cancel" onclick="goBack()">← Quay Lại</button>
+                    <button class="btn btn-confirm" id="confirmBtn" disabled onclick="confirmPayment()">Tiếp Tục Thanh Toán</button>
+                </div>
+            </div>
+            
+            <div class="loading" id="loadingSection">
+                <div class="spinner"></div>
+                <p>Đang xử lý...</p>
+            </div>
+            
+            <div class="faq">
+                <h4>❓ Câu hỏi thường gặp</h4>
+                <ul>
+                    <li><strong>Đã thanh toán nhưng chưa thấy slot?</strong> Slot sẽ tự cộng trong vòng 5 phút. Hãy gõ /balance để kiểm tra.</li>
+                    <li><strong>Có hoàn lại tiền không?</strong> Không hỗ trợ hoàn lại, nhưng slot sẽ được lưu vĩnh viễn.</li>
+                    <li><strong>Tối đa mua bao nhiêu slot?</strong> Không có giới hạn! Mua bao nhiêu tùy ý.</li>
+                    <li><strong>Hỗ trợ?</strong> Liên hệ admin: @support_bot</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatId = urlParams.get('chat_id');
+        const paymentUrl = '/api/payment/add-credits';
+        const pricingUrl = '/api/payment/pricing';
+        
+        let selectedSlots = 0;
+        let selectedPrice = 0;
+        let selectedMethod = 'qr';
+        
+        // Load pricing
+        async function loadPricing() {
+            try {
+                const res = await fetch(pricingUrl);
+                const packages = await res.json();
+                renderPackages(packages);
+                loadUserInfo();
+            } catch (err) {
+                showAlert('Lỗi tải thông tin giá cả', 'error');
+            }
+        }
+        
+        function renderPackages(packages) {
+            const container = document.getElementById('packages');
+            container.innerHTML = '';
+            
+            packages.forEach((pkg, idx) => {
+                const isLast = idx === packages.length - 1;
+                const div = document.createElement('div');
+                div.className = `package ${isLast ? 'featured' : ''}`;
+                div.onclick = () => selectPackage(pkg.slots, pkg.price, div);
+                
+                let html = `
+                    ${isLast ? '<div class="badge">📌 Được Yêu Thích</div>' : ''}
+                    <div class="package-slots">+${pkg.slots}</div>
+                    <div class="package-label">slot</div>
+                    <div class="package-price">${pkg.price.toLocaleString()}đ</div>
+                `;
+                
+                if (pkg.label.includes('tiết kiệm')) {
+                    const saved = pkg.slots * 10000 - pkg.price;
+                    html += `<div class="package-save">Tiết kiệm: ${saved.toLocaleString()}đ</div>`;
+                }
+                
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+        }
+        
+        function selectPackage(slots, price, element) {
+            document.querySelectorAll('.package').forEach(p => p.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedSlots = slots;
+            selectedPrice = price;
+            updateSelectedInfo();
+            document.getElementById('confirmBtn').disabled = false;
+        }
+        
+        function updateSelectedInfo() {
+            const infoBox = document.getElementById('selectedInfo');
+            infoBox.classList.add('show');
+            infoBox.innerHTML = `
+                <p>📌 <strong>Gói được chọn:</strong> +${selectedSlots} slot</p>
+                <p>💵 <strong>Giá:</strong> ${selectedPrice.toLocaleString()}đ</p>
+                <div class="total">Tổng cộng: ${selectedPrice.toLocaleString()}đ</div>
+            `;
+        }
+        
+        function loadUserInfo() {
+            if (!chatId) {
+                showAlert('Lỗi: Không tìm thấy Telegram ID. Vui lòng bấm link từ Telegram bot.', 'error');
+                return;
+            }
+            
+            const infoBox = document.getElementById('userInfo');
+            infoBox.innerHTML = `
+                <div class="info-row">
+                    <span class="info-label">👤 Telegram ID:</span>
+                    <span class="info-value">${chatId}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📱 Trạng thái:</span>
+                    <span class="info-value">✅ Sẵn sàng thanh toán</span>
+                </div>
+            `;
+        }
+        
+        document.querySelectorAll('.method').forEach(method => {
+            method.addEventListener('click', function() {
+                document.querySelectorAll('.method').forEach(m => m.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedMethod = this.dataset.method;
+            });
+        });
+        
+        function confirmPayment() {
+            if (!selectedSlots || !chatId) {
+                showAlert('Vui lòng chọn gói nạp tiền', 'error');
+                return;
+            }
+            
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('loadingSection').style.display = 'block';
+            
+            setTimeout(() => {
+                processPayment();
+            }, 2000);
+        }
+        
+        async function processPayment() {
+            try {
+                const response = await fetch(paymentUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        amount: selectedPrice
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Lỗi thanh toán');
+                }
+                
+                document.getElementById('loadingSection').style.display = 'none';
+                showSuccessScreen(data);
+                
+            } catch (err) {
+                document.getElementById('loadingSection').style.display = 'none';
+                showAlert(`Lỗi: ${err.message}`, 'error');
+                document.getElementById('formSection').style.display = 'block';
+            }
+        }
+        
+        function showSuccessScreen(data) {
+            const container = document.querySelector('.content');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+                    <h2 style="color: #333; margin-bottom: 10px; font-size: 24px;">Thanh Toán Thành Công!</h2>
+                    <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Cảm ơn bạn đã nạp tiền</p>
+                    
+                    <div style="background: #f0f4ff; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: left; font-size: 13px;">
+                        <div style="margin-bottom: 8px;"><strong>📦 Gói:</strong> +${selectedSlots} slot</div>
+                        <div style="margin-bottom: 8px;"><strong>💵 Số tiền:</strong> ${selectedPrice.toLocaleString()}đ</div>
+                        <div style="margin-bottom: 8px;"><strong>📊 Tổng slot:</strong> ${data.max_tracks}</div>
+                        <div style="margin-bottom: 8px;"><strong>💰 Tổng credits:</strong> ${data.credits.toLocaleString()}đ</div>
+                    </div>
+                    
+                    <p style="color: #10b981; font-weight: 600; margin-bottom: 20px; font-size: 13px;">✓ Slot sẽ tự cộng vào tài khoản ngay lập tức!</p>
+                    
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #856404;">
+                        💡 Bây giờ bạn có thể quay lại Telegram bot và dùng /track để thêm link mới!
+                    </div>
+                    
+                    <button onclick="goBack()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">← Quay Lại Telegram Bot</button>
+                </div>
+            `;
+        }
+        
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = `alert show alert-${type}`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertBox.classList.remove('show');
+                }, 5000);
+            }
+        }
+        
+        function goBack() {
+            window.location.href = 'https://t.me/YourBotUsername';
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadPricing);
+    </script>
+</body>
+</html>
