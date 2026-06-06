@@ -382,20 +382,32 @@ def api_get_qr_info():
         "content": add_info
     }), 200
 
+import threading
+
+BOT_USERNAME_CACHE = ""
+
+def fetch_bot_username():
+    global BOT_USERNAME_CACHE
+    token = os.environ.get("TELEGRAM_TOKEN", "")
+    if token:
+        try:
+            import telebot
+            from telebot import apihelper
+            apihelper.CONNECT_TIMEOUT = 3
+            apihelper.READ_TIMEOUT = 3
+            bot = telebot.TeleBot(token)
+            me = bot.get_me()
+            BOT_USERNAME_CACHE = me.username
+        except Exception as e:
+            pass
+
+# Run in background to prevent blocking the web server startup and requests
+threading.Thread(target=fetch_bot_username, daemon=True).start()
+
 @app.route('/api/bot-info', methods=['GET'])
 def api_bot_info():
     """Trả về thông tin bot (username) để làm link trên UI"""
-    import telebot
-    token = os.environ.get("TELEGRAM_TOKEN", "")
-    bot_username = ""
-    if token:
-        try:
-            bot = telebot.TeleBot(token)
-            me = bot.get_me()
-            bot_username = me.username
-        except Exception as e:
-            pass
-    return jsonify({"username": bot_username})
+    return jsonify({"username": BOT_USERNAME_CACHE})
 
 # ============================
 # HEALTH CHECK

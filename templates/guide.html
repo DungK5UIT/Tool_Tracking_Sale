@@ -306,6 +306,14 @@
                 min-width: auto;
             }
         }
+        #guide-chatid {
+            transition: all 0.3s ease;
+        }
+        #guide-chatid:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+            background: #fff;
+        }
     </style>
 </head>
 <body>
@@ -316,6 +324,19 @@
         </div>
         
         <div class="content">
+            <!-- LOGIN SECTION -->
+            <div class="section" style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; padding: 35px 30px;">
+                <h2 style="color: #667eea; margin-bottom: 8px;">🔑 Đăng Nhập Dashboard Quản Lý</h2>
+                <p style="color: #475569; font-size: 14.5px; line-height: 1.6; margin-bottom: 20px;">
+                    Nếu bạn đã theo dõi các bước bên dưới và lấy được Telegram ID, hãy nhập ID vào đây để chuyển trực tiếp đến bảng điều khiển (Dashboard) của bạn:
+                </p>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <input type="text" id="guide-chatid" placeholder="Dán Telegram ID của bạn vào đây (ví dụ: 12345678)..." style="flex: 2; min-width: 250px; padding: 14px 16px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; font-family: monospace;">
+                    <button class="btn btn-primary" onclick="submitGuideLogin()" style="flex: 1; min-width: 140px; margin-top: 0; padding: 14px 20px; font-size: 15px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: 600; cursor: pointer;">Đăng Nhập Ngay 🚀</button>
+                </div>
+                <div id="login-error" style="color: #ef4444; font-size: 14px; margin-top: 10px; display: none; font-weight: 600;"></div>
+            </div>
+
             <!-- TELEGRAM ID SECTION -->
             <div class="section">
                 <h2>🆔 Telegram ID của bạn</h2>
@@ -582,7 +603,6 @@
                 
                 <h3>Truy Cập Dashboard</h3>
                 <div class="example">
-                    <strong>Địa chỉ:</strong> http://localhost:8080<br>
                     <strong>Nhập ID:</strong> Telegram ID của bạn (ví dụ: 123456789)
                 </div>
                 
@@ -623,9 +643,8 @@
                 <p>Nếu gặp vấn đề hoặc có câu hỏi, vui lòng liên hệ:</p>
                 
                 <div class="example">
-                    <strong>Telegram Bot Admin:</strong> @support_bot<br>
-                    <strong>Website:</strong> http://localhost:8080<br>
-                    <strong>Email:</strong> support@example.com<br>
+                    <strong>SĐT:</strong> 0896003107<br>
+                    <strong>Email:</strong> nguyenhuudung1072005@gmail.com<br>
                 </div>
                 
                 <p style="margin-top: 20px; color: #999; font-size: 12px;">
@@ -650,6 +669,59 @@
         
         // Open first FAQ item by default
         document.querySelector('.faq-item').classList.add('open');
+
+        // Guide Login logic
+        function submitGuideLogin() {
+            const val = document.getElementById('guide-chatid').value.trim();
+            const err = document.getElementById('login-error');
+            if (!val) {
+                err.textContent = '❌ Vui lòng nhập ID Telegram';
+                err.style.display = 'block';
+                return;
+            }
+            err.style.display = 'none';
+            // Save to localStorage
+            localStorage.setItem('chat_id', val);
+            // Redirect to dashboard
+            window.location.href = `/?chat_id=${val}`;
+        }
+        
+        // Enter key to login
+        document.getElementById('guide-chatid').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                submitGuideLogin();
+            }
+        });
+
+        // Initialize page parameters and buttons
+        (function initGuidePage() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const param = urlParams.get('chat_id');
+                const stored = localStorage.getItem('chat_id');
+                const chatId = (param && param.trim()) || (stored && stored.trim());
+                if (chatId) {
+                    document.getElementById('guide-chatid').value = chatId;
+                    const backBtns = document.querySelectorAll('a[href="/"]');
+                    backBtns.forEach(btn => {
+                        btn.href = `/?chat_id=${chatId}`;
+                    });
+                }
+            } catch(e) {}
+            
+            // Dynamic Bot Username
+            fetch('/api/bot-info')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.username) {
+                        const botLinks = document.querySelectorAll('a[href*="YourBotUsername"]');
+                        botLinks.forEach(link => {
+                            link.href = `https://t.me/${data.username}`;
+                        });
+                    }
+                })
+                .catch(err => console.error(err));
+        })();
     </script>
 </body>
 </html>
