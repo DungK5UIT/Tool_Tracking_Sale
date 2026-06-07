@@ -1,30 +1,34 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import os
 
-DB_NAME = "tracker.db"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql://postgres.ivozwtwaldyqbahhspti:HuuDung_1072005@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres"
+)
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_NAME, check_same_thread=False, timeout=10)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 def init_db():
     conn = get_db_connection()
-    conn.execute('PRAGMA journal_mode=WAL;')
+    cur = conn.cursor()
     # Bảng tracks (sản phẩm theo dõi)
-    conn.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS tracks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             chat_id TEXT NOT NULL,
             url TEXT NOT NULL,
             last_status TEXT DEFAULT 'unknown',
             UNIQUE(chat_id, url)
         )
     ''')
-    conn.execute('''
+    cur.execute('''
         CREATE INDEX IF NOT EXISTS idx_chat_id ON tracks(chat_id)
     ''')
     # Bảng user_profiles (thông tin người dùng + slot)
-    conn.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS user_profiles (
             chat_id      TEXT PRIMARY KEY,
             display_name TEXT DEFAULT '',
@@ -33,6 +37,7 @@ def init_db():
         )
     ''')
     conn.commit()
+    cur.close()
     conn.close()
 
 # ============================
@@ -42,36 +47,44 @@ def init_db():
 def get_or_create_user(chat_id):
     """Lấy profile user, tạo mới nếu chưa có. Luôn trả về row."""
     conn = get_db_connection()
-    conn.execute(
-        "INSERT OR IGNORE INTO user_profiles (chat_id) VALUES (?)",
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(
+        "INSERT INTO user_profiles (chat_id) VALUES (%s) ON CONFLICT (chat_id) DO NOTHING",
         (chat_id,)
     )
     conn.commit()
-    row = conn.execute(
-        "SELECT * FROM user_profiles WHERE chat_id = ?", (chat_id,)
-    ).fetchone()
+    cur.execute(
+        "SELECT * FROM user_profiles WHERE chat_id = %s", (chat_id,)
+    )
+    row = cur.fetchone()
+    cur.close()
     conn.close()
     return row
 
 def set_display_name(chat_id, name):
     """Cập nhật tên hiển thị cho user."""
     conn = get_db_connection()
-    conn.execute(
-        "INSERT OR IGNORE INTO user_profiles (chat_id) VALUES (?)", (chat_id,)
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO user_profiles (chat_id) VALUES (%s) ON CONFLICT (chat_id) DO NOTHING", (chat_id,)
     )
-    conn.execute(
-        "UPDATE user_profiles SET display_name = ? WHERE chat_id = ?",
+    cur.execute(
+        "UPDATE user_profiles SET display_name = %s WHERE chat_id = %s",
         (name.strip(), chat_id)
     )
     conn.commit()
+    cur.close()
     conn.close()
 
 def get_max_tracks(chat_id):
     """Lấy số slot tối đa của user (mặc định 2)."""
     conn = get_db_connection()
-    row = conn.execute(
-        "SELECT max_tracks FROM user_profiles WHERE chat_id = ?", (chat_id,)
-    ).fetchone()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(
+        "SELECT max_tracks FROM user_profiles WHERE chat_id = %s", (chat_id,)
+    )
+    row = cur.fetchone()
+    cur.close()
     conn.close()
     return row['max_tracks'] if row else 2
 
@@ -81,23 +94,26 @@ def add_credits(chat_id, amount_vnd):
     10.000đ = +1 slot. Trả về số slot mới.
     """
     conn = get_db_connection()
-    conn.execute(
-        "INSERT OR IGNORE INTO user_profiles (chat_id) VALUES (?)", (chat_id,)
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(
+        "INSERT INTO user_profiles (chat_id) VALUES (%s) ON CONFLICT (chat_id) DO NOTHING", (chat_id,)
     )
     # Cộng credits và tính thêm slot: mỗi 10.000đ = 1 slot
     slots_to_add = amount_vnd // 10000
-    conn.execute(
+    cur.execute(
         """UPDATE user_profiles 
-           SET credits = credits + ?,
-               max_tracks = max_tracks + ?
-           WHERE chat_id = ?""",
+           SET credits = credits + %s,
+               max_tracks = max_tracks + %s
+           WHERE chat_id = %s""",
         (amount_vnd, slots_to_add, chat_id)
     )
     conn.commit()
-    row = conn.execute(
-        "SELECT max_tracks, credits FROM user_profiles WHERE chat_id = ?",
+    cur.execute(
+        "SELECT max_tracks, credits FROM user_profiles WHERE chat_id = %s",
         (chat_id,)
-    ).fetchone()
+    )
+    row = cur.fetchone()
+    cur.close()
     conn.close()
     if row:
         return dict(row)
@@ -109,7 +125,8 @@ def get_all_user_profiles():
     Dùng cho Admin panel.
     """
     conn = get_db_connection()
-    rows = conn.execute('''
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('''
         SELECT
             p.chat_id,
             p.display_name,
@@ -120,9 +137,11 @@ def get_all_user_profiles():
         LEFT JOIN tracks t ON p.chat_id = t.chat_id
         GROUP BY p.chat_id
         ORDER BY p.credits DESC, track_count DESC
-    ''').fetchall()
+    ''')
+    rows = cur.fetchall()
+    
     # Cũng lấy những user có track nhưng chưa có profile (dùng Telegram chưa qua web)
-    orphans = conn.execute('''
+    cur.execute('''
         SELECT
             t.chat_id,
             '' as display_name,
@@ -132,7 +151,9 @@ def get_all_user_profiles():
         FROM tracks t
         WHERE t.chat_id NOT IN (SELECT chat_id FROM user_profiles)
         GROUP BY t.chat_id
-    ''').fetchall()
+    ''')
+    orphans = cur.fetchall()
+    cur.close()
     conn.close()
     return list(rows) + list(orphans)
 
@@ -146,78 +167,98 @@ def add_track(chat_id, url):
     KHÔNG kiểm tra rate limit ở đây — gọi get_max_tracks() trước khi gọi hàm này.
     """
     conn = get_db_connection()
+    cur = conn.cursor()
     try:
-        conn.execute(
-            "INSERT INTO tracks (chat_id, url) VALUES (?, ?)",
+        cur.execute(
+            "INSERT INTO tracks (chat_id, url) VALUES (%s, %s)",
             (chat_id, url)
         )
         conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
+        success = True
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        success = False
     finally:
+        cur.close()
         conn.close()
+    return success
 
 def remove_track(track_id, chat_id):
     """Xóa track theo ID + chat_id (user chỉ xóa được của mình)."""
     conn = get_db_connection()
-    cursor = conn.execute(
-        "DELETE FROM tracks WHERE id = ? AND chat_id = ?",
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM tracks WHERE id = %s AND chat_id = %s",
         (track_id, chat_id)
     )
     conn.commit()
-    rows_deleted = cursor.rowcount
+    rows_deleted = cur.rowcount
+    cur.close()
     conn.close()
     return rows_deleted > 0
 
 def get_all_tracks():
     conn = get_db_connection()
-    tracks = conn.execute("SELECT * FROM tracks").fetchall()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM tracks")
+    tracks = cur.fetchall()
+    cur.close()
     conn.close()
     return tracks
 
 def get_tracks_by_chat(chat_id):
     """Lấy danh sách track của một user."""
     conn = get_db_connection()
-    tracks = conn.execute(
-        "SELECT * FROM tracks WHERE chat_id = ?", (chat_id,)
-    ).fetchall()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute(
+        "SELECT * FROM tracks WHERE chat_id = %s", (chat_id,)
+    )
+    tracks = cur.fetchall()
+    cur.close()
     conn.close()
     return tracks
 
 def update_status(track_id, new_status):
     conn = get_db_connection()
-    conn.execute("UPDATE tracks SET last_status = ? WHERE id = ?", (new_status, track_id))
+    cur = conn.cursor()
+    cur.execute("UPDATE tracks SET last_status = %s WHERE id = %s", (new_status, track_id))
     conn.commit()
+    cur.close()
     conn.close()
 
 def get_all_users():
     """Lấy danh sách tất cả user (chat_id) kèm số lượng track (legacy)."""
     conn = get_db_connection()
-    users = conn.execute('''
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('''
         SELECT chat_id, COUNT(*) as track_count
         FROM tracks
         GROUP BY chat_id
         ORDER BY track_count DESC
-    ''').fetchall()
+    ''')
+    users = cur.fetchall()
+    cur.close()
     conn.close()
-    return users
     return users
 
 def remove_all_tracks_by_chat(chat_id):
     """Xóa TẤT CẢ sản phẩm của một user. Dùng cho admin."""
     conn = get_db_connection()
-    cursor = conn.execute("DELETE FROM tracks WHERE chat_id = ?", (chat_id,))
+    cur = conn.cursor()
+    cur.execute("DELETE FROM tracks WHERE chat_id = %s", (chat_id,))
     conn.commit()
-    rows_deleted = cursor.rowcount
+    rows_deleted = cur.rowcount
+    cur.close()
     conn.close()
     return rows_deleted
 
 def remove_tracks_by_status(status):
     """Xóa tất cả track có trạng thái cụ thể. Dùng cho admin."""
     conn = get_db_connection()
-    cursor = conn.execute("DELETE FROM tracks WHERE last_status = ?", (status,))
+    cur = conn.cursor()
+    cur.execute("DELETE FROM tracks WHERE last_status = %s", (status,))
     conn.commit()
-    rows_deleted = cursor.rowcount
+    rows_deleted = cur.rowcount
+    cur.close()
     conn.close()
     return rows_deleted
