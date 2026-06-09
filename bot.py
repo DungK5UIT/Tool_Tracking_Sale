@@ -24,6 +24,18 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 db.init_db()
 
+from flask import request, abort
+
+@flask_app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        abort(403)
+
 # Cấu hình chu kỳ check ngầm (giây)
 CHECK_INTERVAL = 120
 
@@ -407,4 +419,22 @@ if __name__ == "__main__":
     threading.Thread(target=run_web_server, daemon=True).start()
     threading.Thread(target=background_checker, daemon=True).start()
     print("🚀 Bot Telegram đã sẵn sàng!")
-    bot.infinity_polling()
+    
+    render_url = os.environ.get("RENDER_EXTERNAL_URL")
+    if render_url:
+        print("🌍 Chạy trên Render: Đang thiết lập Webhook...")
+        bot.remove_webhook()
+        time.sleep(1)
+        webhook_url = f"{render_url}/{TELEGRAM_TOKEN}"
+        bot.set_webhook(url=webhook_url)
+        print(f"✅ Webhook đã được thiết lập tại {webhook_url}")
+        
+        # Waitress and Background Checker run in threads, 
+        # so we need to keep the main thread alive
+        while True:
+            time.sleep(100)
+    else:
+        print("💻 Chạy ở Local: Đang dùng chế độ Polling...")
+        bot.remove_webhook()
+        time.sleep(1)
+        bot.infinity_polling()
