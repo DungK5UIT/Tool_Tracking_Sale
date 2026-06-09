@@ -147,6 +147,20 @@ def admin_set_user_name(chat_id):
     db.set_display_name(chat_id, name)
     return jsonify({'message': f'Đã cập nhật tên cho {chat_id}'}), 200
 
+@app.route('/api/admin/users/<chat_id>/tracks', methods=['GET'])
+@admin_required
+def admin_get_user_tracks_list(chat_id):
+    """Lấy danh sách track của một user (admin)."""
+    tracks = db.get_tracks_by_chat(chat_id)
+    result = []
+    for t in tracks:
+        result.append({
+            'id': t['id'],
+            'url': t['url'],
+            'last_status': t['last_status']
+        })
+    return jsonify(result)
+
 @app.route('/api/admin/users/<chat_id>/tracks', methods=['DELETE'])
 @admin_required
 def admin_remove_user_tracks(chat_id):
