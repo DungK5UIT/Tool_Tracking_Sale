@@ -1926,10 +1926,32 @@
                                     <span class="status-pill ${escapeHtml(t.last_status)}">${escapeHtml(t.last_status)}</span>
                                 </div>
                             </div>
+                            <button class="btn-delete-sm" onclick="adminDeleteTrack(${t.id}, '${escapeHtml(chatId)}')" title="Xóa link này">🗑️ Xóa</button>
                         </div>
                     `).join('');
                 }
                 container.style.display = 'block';
+            } catch (err) {
+                showToast('Lỗi kết nối: ' + err.message, 'error');
+            }
+        }
+
+        async function adminDeleteTrack(trackId, chatId) {
+            if (!confirm(`Bạn có chắc muốn xóa sản phẩm ID ${trackId} không?`)) return;
+            try {
+                const res = await fetch(`/api/tracks/${trackId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('🗑️ Đã xóa sản phẩm ID ' + trackId, 'success');
+                    const container = document.getElementById('tracks-container-' + chatId);
+                    if (container && container.style.display === 'block') {
+                        container.style.display = 'none';
+                        await viewUserTracks(chatId);
+                    }
+                    await loadAdminData();
+                } else {
+                    showToast('❌ ' + (data.error || 'Lỗi khi xóa'), 'error');
+                }
             } catch (err) {
                 showToast('Lỗi kết nối: ' + err.message, 'error');
             }

@@ -2555,12 +2555,101 @@
                                 </div>
                             </div>
                             <div class="user-actions">
-                                <button class="btn-view" onclick="deleteAllTracksForUser('${escapeHtml(user.chat_id)}')">Xóa tất cả</button>
+                                <button class="btn-credits" onclick="addCreditsToUser('${escapeHtml(user.chat_id)}')">💰 Thêm Token</button>
+                                <button class="btn-view" onclick="viewUserTracks('${escapeHtml(user.chat_id)}')">👁️ Xem Links</button>
+                                <button class="btn-delete-all" onclick="deleteAllTracksForUser('${escapeHtml(user.chat_id)}')">🗑️ Xóa hết</button>
                             </div>
                         </div>
+                        <div id="tracks-container-${escapeHtml(user.chat_id)}" style="display:none;" class="user-products"></div>
                     </div>
                 `;
             }).join('');
+        }
+
+        async function addCreditsToUser(chatId) {
+            const amountStr = prompt("Nhập số tiền Token cần nạp (Mỗi 10,000đ = +1 slot):", "10000");
+            if (!amountStr) return;
+            const amount = parseInt(amountStr);
+            if (isNaN(amount) || amount <= 0) {
+                showToast('❌ Số tiền không hợp lệ', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/admin/users/${encodeURIComponent(chatId)}/credits`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('✅ ' + data.message, 'success');
+                    await loadAdminData();
+                } else {
+                    showToast('❌ ' + (data.error || 'Lỗi khi nạp'), 'error');
+                }
+            } catch (err) {
+                showToast('Lỗi kết nối: ' + err.message, 'error');
+            }
+        }
+
+        async function viewUserTracks(chatId) {
+            const container = document.getElementById('tracks-container-' + chatId);
+            if (!container) return;
+            
+            if (container.style.display === 'block') {
+                container.style.display = 'none';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin/users/${encodeURIComponent(chatId)}/tracks`);
+                if (!res.ok) {
+                    showToast('❌ Không thể tải danh sách', 'error');
+                    return;
+                }
+                const tracks = await res.json();
+                if (tracks.length === 0) {
+                    container.innerHTML = '<div class="user-product-item"><div class="user-product-left">Chưa có sản phẩm nào.</div></div>';
+                } else {
+                    container.innerHTML = '<div class="user-products-title">Danh sách theo dõi</div>' + tracks.map(t => `
+                        <div class="user-product-item">
+                            <div class="user-product-left">
+                                <a href="${escapeHtml(t.url)}" target="_blank" class="user-product-url">${escapeHtml(t.url)}</a>
+                                <div class="user-product-meta">
+                                    <span class="user-product-id">ID: ${t.id}</span>
+                                    <span class="status-pill ${escapeHtml(t.last_status)}">${escapeHtml(t.last_status)}</span>
+                                </div>
+                            </div>
+                            <button class="btn-delete-sm" onclick="adminDeleteTrack(${t.id}, '${escapeHtml(chatId)}')" title="Xóa link này">🗑️ Xóa</button>
+                        </div>
+                    `).join('');
+                }
+                container.style.display = 'block';
+            } catch (err) {
+                showToast('Lỗi kết nối: ' + err.message, 'error');
+            }
+        }
+
+        async function adminDeleteTrack(trackId, chatId) {
+            if (!confirm(`Bạn có chắc muốn xóa sản phẩm ID ${trackId} không?`)) return;
+            try {
+                const res = await fetch(`/api/tracks/${trackId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('🗑️ Đã xóa sản phẩm ID ' + trackId, 'success');
+                    const container = document.getElementById('tracks-container-' + chatId);
+                    if (container && container.style.display === 'block') {
+                        container.style.display = 'none';
+                        await viewUserTracks(chatId);
+                    }
+                    await loadAdminData();
+                    await loadTracks();
+                } else {
+                    showToast('❌ ' + (data.error || 'Lỗi khi xóa'), 'error');
+                }
+            } catch (err) {
+                showToast('Lỗi kết nối: ' + err.message, 'error');
+            }
         }
 
         function confirmBulkDeleteErrors() {
